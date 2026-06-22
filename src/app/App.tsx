@@ -12,51 +12,7 @@ import SpeechBubble from "@/components/SpeechBubble";
 import TextAreaField from "@/components/TextAreaField";
 import UploadZone from "@/components/UploadZone";
 import { font, radius, spacing, layout } from "@/components/tokens";
-
-// ─── Static data ──────────────────────────────────────────────────────────────
-
-const MOCK_RESULT: { score: number; summary: string; issues: Issue[] } = {
-  score: 7.4,
-  summary:
-    "Інтерфейс має чітку структуру та зрозумілу навігацію, проте є кілька проблем із візуальною ієрархією та читабельністю тексту. CTA-кнопки виражені слабко, а деякі елементи потребують кращого вирівнювання та відступів.",
-  issues: [
-    {
-      title: "Слабка візуальна ієрархія",
-      description:
-        "Заголовки та основний текст мають схожий розмір, через що важко відразу зрозуміти головне повідомлення екрана.",
-      recommendation:
-        "Збільш розмір заголовків мінімум до 32px і використай різницю у вазі шрифту (Bold vs Regular), щоб чітко розрізнити рівні.",
-    },
-    {
-      title: "CTA-кнопка губиться на фоні",
-      description:
-        "Головна кнопка дії використовує той же колір, що й другорядні елементи, тому не привертає увагу першою.",
-      recommendation:
-        "Виділи основний CTA контрастним кольором або збільш розмір кнопки. Переконайся, що вона виглядає як очевидна наступна дія.",
-    },
-    {
-      title: "Проблеми зі spacing між блоками",
-      description:
-        "Відступи між секціями нерівномірні — в одних місцях занадто щільно, в інших надмірно вільно, що порушує ритм сторінки.",
-      recommendation:
-        "Запровади систему відступів кратну 8px (8, 16, 24, 32, 48, 64). Використовуй однакові значення для схожих за рівнем елементів.",
-    },
-    {
-      title: "Низька читабельність дрібного тексту",
-      description:
-        "Текст розміром менше 14px на світлому фоні не відповідає стандартам контрасту WCAG AA (4.5:1 для малого тексту).",
-      recommendation:
-        "Збільш мінімальний розмір тексту до 14px та переконайся, що контраст між текстом і фоном не менше 4.5:1.",
-    },
-    {
-      title: "Alignment елементів порушено",
-      description:
-        "Кілька іконок і підписів до них вирівняні по-різному — частина по лівому краю, частина по центру, що створює візуальний безлад.",
-      recommendation:
-        "Визнач єдине правило вирівнювання для схожих компонентів і дотримуйся його. Для списків використовуй flex або grid із чіткою базовою лінією.",
-    },
-  ],
-};
+import { analyzeDesign, type AnalysisResult } from "@/lib/gemini";
 
 const ANALYSIS_STEPS = [
   "Аналізую структуру інтерфейсу",
@@ -79,7 +35,7 @@ type Screen = "upload" | "loading" | "results";
 // ─── Screen 1: Upload ─────────────────────────────────────────────────────────
 
 interface UploadScreenProps {
-  onAnalyze: (previewUrl: string) => void;
+  onAnalyze: (file: File, previewUrl: string, context: string) => void;
 }
 
 function UploadScreen({ onAnalyze }: UploadScreenProps) {
@@ -139,7 +95,7 @@ function UploadScreen({ onAnalyze }: UploadScreenProps) {
         <div className="w-full">
           <Button
             disabled={!file}
-            onClick={() => preview && onAnalyze(preview)}
+            onClick={() => file && preview && onAnalyze(file, preview, context)}
           >
             Проаналізувати дизайн
           </Button>
@@ -201,11 +157,12 @@ function LoadingScreen() {
 
 interface ResultsScreenProps {
   preview: string | null;
+  result: AnalysisResult;
   onReset: () => void;
 }
 
-function ResultsScreen({ preview, onReset }: ResultsScreenProps) {
-  const { score, summary, issues } = MOCK_RESULT;
+function ResultsScreen({ preview, result, onReset }: ResultsScreenProps) {
+  const { score, summary, issues } = result;
 
   return (
     <PageWrapper>
@@ -309,15 +266,29 @@ function ResultsScreen({ preview, onReset }: ResultsScreenProps) {
 export default function App() {
   const [screen, setScreen] = useState<Screen>("upload");
   const [preview, setPreview] = useState<string | null>(null);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleAnalyze = (previewUrl: string) => {
+  const handleAnalyze = async (file: File, previewUrl: string, context: string) => {
     setPreview(previewUrl);
+    setError(null);
     setScreen("loading");
-    setTimeout(() => setScreen("results"), 5000);
+
+    try {
+      const base64 = await fileToBase64(file);
+      const analysisResult = await analyzeDesign(base64, file.type, context);
+      setResult(analysisResult);
+      setScreen("results");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Сталася помилка аналізу");
+      setScreen("upload");
+    }
   };
 
   const handleReset = () => {
     setPreview(null);
+    setResult(null);
+    setError(null);
     setScreen("upload");
   };
 
@@ -333,6 +304,9 @@ export default function App() {
           transition={{ duration: 0.25 }}
         >
           <UploadScreen onAnalyze={handleAnalyze} />
+          {error && (
+            <p style={{ color: "red", textAlign: "center", marginTop: 16 }}>{error}</p>
+          )}
         </motion.div>
       )}
 
@@ -349,7 +323,7 @@ export default function App() {
         </motion.div>
       )}
 
-      {screen === "results" && (
+      {screen === "results" && result && (
         <motion.div
           key="results"
           className="w-full min-h-screen"
@@ -358,9 +332,21 @@ export default function App() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <ResultsScreen preview={preview} onReset={handleReset} />
+          <ResultsScreen preview={preview} result={result} onReset={handleReset} />
         </motion.div>
       )}
     </AnimatePresence>
   );
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      resolve(dataUrl.split(",")[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }

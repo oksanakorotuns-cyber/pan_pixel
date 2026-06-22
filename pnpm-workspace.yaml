@@ -3,6 +3,8 @@ packages:
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'
   - esbuild
+  - '@google/genai'
+  - protobufjs
 overrides:
   vite: 6.3.5
 supportedArchitectures:
