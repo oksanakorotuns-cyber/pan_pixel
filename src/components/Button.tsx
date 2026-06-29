@@ -9,6 +9,7 @@ interface ButtonProps {
   disabled?: boolean;
   variant?: ButtonVariant;
   icon?: React.ReactNode;
+  style?: React.CSSProperties;
 }
 
 export default function Button({
@@ -16,6 +17,7 @@ export default function Button({
   onClick,
   disabled = false,
   icon,
+  style: styleProp,
 }: ButtonProps) {
   const variant: ButtonVariant = disabled ? "disabled" : "primary";
 
@@ -43,6 +45,7 @@ export default function Button({
         alignItems: "center",
         gap: 8,
         transition: "background 0.15s",
+        ...styleProp,
       }}
     >
       {icon}

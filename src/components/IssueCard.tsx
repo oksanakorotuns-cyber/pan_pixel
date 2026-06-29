@@ -1,27 +1,30 @@
 import { motion } from "motion/react";
-import { font, radius, spacing } from "./tokens";
+import { font, spacing } from "./tokens";
+import type { Sticker } from "@/lib/gemini";
 
-export interface Issue {
-  title: string;
-  description: string;
-  recommendation: string;
-}
+export type { Sticker };
 
 interface IssueCardProps {
-  issue: Issue;
+  sticker: Sticker;
   index: number;
 }
 
 const STICKER_COLORS = [
-  { bg: "#fde68a", rec: "#fbbf24" }, // жовтий
-  { bg: "#c4b5fd", rec: "#a78bfa" }, // фіолетовий
-  { bg: "#86efac", rec: "#4ade80" }, // зелений
-  { bg: "#fdba74", rec: "#fb923c" }, // помаранчевий
-  { bg: "#93c5fd", rec: "#60a5fa" }, // блакитний
-  { bg: "#f9a8d4", rec: "#f472b6" }, // рожевий
+  { bg: "#fde68a" },
+  { bg: "#c4b5fd" },
+  { bg: "#86efac" },
+  { bg: "#fdba74" },
+  { bg: "#93c5fd" },
+  { bg: "#f9a8d4" },
 ];
 
-export default function IssueCard({ issue, index }: IssueCardProps) {
+const SEVERITY_LABEL: Record<Sticker["severity"], string> = {
+  high: "критично",
+  medium: "середнє",
+  low: "дрібниця",
+};
+
+export default function IssueCard({ sticker, index }: IssueCardProps) {
   const color = STICKER_COLORS[index % STICKER_COLORS.length];
 
   return (
@@ -39,28 +42,45 @@ export default function IssueCard({ issue, index }: IssueCardProps) {
         position: "relative",
       }}
     >
-      {/* Номер */}
-      <span
-        style={{
-          fontFamily: font.mono,
-          fontWeight: 700,
-          fontSize: 10,
-          textTransform: "uppercase",
-          letterSpacing: "0.06em",
-          opacity: 0.5,
-        }}
-      >
-        #{String(index + 1).padStart(2, "0")}
-      </span>
+      {/* Номер + severity */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span
+          style={{
+            fontFamily: font.mono,
+            fontWeight: 700,
+            fontSize: 10,
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+            opacity: 0.5,
+          }}
+        >
+          #{String(index + 1).padStart(2, "0")}
+        </span>
+        <span
+          style={{
+            fontFamily: font.mono,
+            fontWeight: 700,
+            fontSize: 10,
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+            opacity: 0.6,
+          }}
+        >
+          {SEVERITY_LABEL[sticker.severity]}
+        </span>
+      </div>
 
+      {/* Principle */}
       <h3 style={{ fontWeight: 700, fontSize: 17, lineHeight: "26px", color: "#111" }}>
-        {issue.title}
+        {sticker.principle}
       </h3>
 
+      {/* Problem */}
       <p style={{ fontSize: 14, lineHeight: "22px", color: "#333", opacity: 0.85 }}>
-        {issue.description}
+        {sticker.problem}
       </p>
 
+      {/* Fix */}
       <div
         style={{
           borderTop: `2px solid rgba(0,0,0,0.1)`,
@@ -85,7 +105,7 @@ export default function IssueCard({ issue, index }: IssueCardProps) {
           →
         </span>
         <p style={{ fontSize: 13, lineHeight: "20px", color: "#222" }}>
-          {issue.recommendation}
+          {sticker.fix}
         </p>
       </div>
     </motion.div>

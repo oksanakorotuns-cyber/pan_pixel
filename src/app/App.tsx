@@ -7,11 +7,11 @@ import Button from "@/components/Button";
 import Card from "@/components/Card";
 import ProgressBar from "@/components/ProgressBar";
 import StepItem from "@/components/StepItem";
-import IssueCard, { type Issue } from "@/components/IssueCard";
+import IssueCard from "@/components/IssueCard";
 import SpeechBubble from "@/components/SpeechBubble";
 import TextAreaField from "@/components/TextAreaField";
 import UploadZone from "@/components/UploadZone";
-import { font, radius, spacing, layout } from "@/components/tokens";
+import { font, radius, spacing, layout, color } from "@/components/tokens";
 import { analyzeDesign, type AnalysisResult } from "@/lib/gemini";
 
 const ANALYSIS_STEPS = [
@@ -162,7 +162,7 @@ interface ResultsScreenProps {
 }
 
 function ResultsScreen({ preview, result, onReset }: ResultsScreenProps) {
-  const { score, summary, issues } = result;
+  const { verdict, stickers } = result;
 
   return (
     <PageWrapper>
@@ -177,7 +177,7 @@ function ResultsScreen({ preview, result, onReset }: ResultsScreenProps) {
           marginTop: spacing.sm,
         }}
       >
-        {/* Left: sticky preview + score */}
+        {/* Left: sticky preview */}
         <div className="flex flex-col" style={{ gap: spacing.md, position: "sticky", top: 24 }}>
           {preview && (
             <motion.div
@@ -194,67 +194,47 @@ function ResultsScreen({ preview, result, onReset }: ResultsScreenProps) {
             </motion.div>
           )}
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-accent border border-border flex flex-col"
-            style={{ borderRadius: radius.lg, padding: "28px 32px", gap: spacing.md }}
-          >
-            <span
-              className="text-foreground"
-              style={{
-                fontFamily: font.mono,
-                fontWeight: 700,
-                fontSize: 11,
-                textTransform: "uppercase",
-                letterSpacing: "0.06em",
-                opacity: 0.7,
-              }}
-            >
-              Загальна оцінка
-            </span>
-            <div className="flex items-end" style={{ gap: spacing.sm }}>
-              <span
-                className="text-foreground"
-                style={{ fontFamily: font.display, fontWeight: 900, fontSize: 72, lineHeight: 1 }}
-              >
-                {score}
-              </span>
-              <span
-                className="text-foreground"
-                style={{ fontSize: 20, opacity: 0.6, marginBottom: 8 }}
-              >
-                / 10
-              </span>
-            </div>
-            <p
-              className="text-foreground"
-              style={{ fontSize: 15, lineHeight: "24px", fontStyle: "italic" }}
-            >
-              "{summary}"
-            </p>
-          </motion.div>
-        </div>
-
-        {/* Right: issues + CTA */}
-        <div className="flex flex-col" style={{ gap: spacing.md }}>
-          <h2
-            className="text-foreground"
-            style={{ fontFamily: font.display, fontWeight: 900, fontSize: 20, marginBottom: spacing.xs }}
-          >
-            Знайдені проблеми
-          </h2>
-
-          {issues.map((issue, i) => (
-            <IssueCard key={issue.title} issue={issue} index={i} />
-          ))}
-
-          <div style={{ marginTop: spacing.xs }}>
-            <Button onClick={onReset} icon={<RefreshCw size={16} />}>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <Button onClick={onReset} icon={<RefreshCw size={16} />} style={{ width: 360, justifyContent: "center" }}>
               Перевірити інший дизайн
             </Button>
           </div>
+        </div>
+
+        {/* Right: stickers */}
+        <div className="flex flex-col" style={{ gap: spacing.md }}>
+          {/* Mascot + speech bubble */}
+          <div className="flex items-center" style={{ gap: spacing.md, marginBottom: spacing.xs }}>
+            <div
+              className="bg-accent relative"
+              style={{ borderRadius: radius.lg, padding: "14px 20px", flexShrink: 0, maxWidth: 220 }}
+            >
+              <p style={{ fontFamily: font.handwriting, fontSize: 18, lineHeight: "26px", margin: 0 }}>
+                {verdict}
+              </p>
+              {/* tail right */}
+              <div style={{
+                position: "absolute",
+                top: "50%",
+                right: -10,
+                transform: "translateY(-50%)",
+                width: 0,
+                height: 0,
+                borderTop: "10px solid transparent",
+                borderBottom: "10px solid transparent",
+                borderLeft: `10px solid ${color.accent}`,
+              }} />
+            </div>
+            <img
+              src="/src/imports/LandingPage/21b3b62def6a3ca793e241c541cc997ca6bac1a9.png"
+              alt="Пан Піксель"
+              style={{ width: 90, height: 90, objectFit: "contain", flexShrink: 0 }}
+            />
+          </div>
+
+          {stickers.map((sticker, i) => (
+            <IssueCard key={sticker.principle + i} sticker={sticker} index={i} />
+          ))}
         </div>
       </div>
     </PageWrapper>
