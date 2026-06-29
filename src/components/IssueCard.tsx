@@ -1,5 +1,4 @@
 import { motion } from "motion/react";
-import { AlertCircle } from "lucide-react";
 import { font, radius, spacing } from "./tokens";
 
 export interface Issue {
@@ -13,52 +12,79 @@ interface IssueCardProps {
   index: number;
 }
 
+const STICKER_COLORS = [
+  { bg: "#fde68a", rec: "#fbbf24" }, // жовтий
+  { bg: "#c4b5fd", rec: "#a78bfa" }, // фіолетовий
+  { bg: "#86efac", rec: "#4ade80" }, // зелений
+  { bg: "#fdba74", rec: "#fb923c" }, // помаранчевий
+  { bg: "#93c5fd", rec: "#60a5fa" }, // блакитний
+  { bg: "#f9a8d4", rec: "#f472b6" }, // рожевий
+];
+
 export default function IssueCard({ issue, index }: IssueCardProps) {
+  const color = STICKER_COLORS[index % STICKER_COLORS.length];
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1 * index }}
-      className="bg-card border border-border flex flex-col"
-      style={{ borderRadius: radius.lg, padding: "24px 28px", gap: spacing.md }}
+      initial={{ opacity: 0, y: 20, rotate: 0 }}
+      animate={{ opacity: 1, y: 0, rotate: index % 2 === 0 ? -1 : 1 }}
+      transition={{ delay: 0.1 * index, type: "spring", stiffness: 200 }}
+      className="flex flex-col"
+      style={{
+        background: color.bg,
+        borderRadius: 0,
+        padding: "24px 28px",
+        gap: spacing.md,
+        boxShadow: "3px 4px 12px rgba(0,0,0,0.12)",
+        position: "relative",
+      }}
     >
-      <div className="flex items-start gap-3">
-        <div
-          className="bg-accent flex items-center justify-center flex-shrink-0"
-          style={{ width: 28, height: 28, borderRadius: radius.xs, marginTop: 2 }}
-        >
-          <AlertCircle size={14} className="text-accent-foreground" />
-        </div>
-        <h3
-          className="text-foreground"
-          style={{ fontWeight: 700, fontSize: 16, lineHeight: "26px" }}
-        >
-          {issue.title}
-        </h3>
-      </div>
+      {/* Номер */}
+      <span
+        style={{
+          fontFamily: font.mono,
+          fontWeight: 700,
+          fontSize: 10,
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          opacity: 0.5,
+        }}
+      >
+        #{String(index + 1).padStart(2, "0")}
+      </span>
 
-      <p className="text-foreground" style={{ fontSize: 14, lineHeight: "22px", opacity: 0.7 }}>
+      <h3 style={{ fontWeight: 700, fontSize: 17, lineHeight: "26px", color: "#111" }}>
+        {issue.title}
+      </h3>
+
+      <p style={{ fontSize: 14, lineHeight: "22px", color: "#333", opacity: 0.85 }}>
         {issue.description}
       </p>
 
       <div
-        className="bg-background border border-border flex gap-2 items-start"
-        style={{ borderRadius: radius.sm, padding: "10px 14px" }}
+        style={{
+          borderTop: `2px solid rgba(0,0,0,0.1)`,
+          paddingTop: spacing.sm,
+          display: "flex",
+          gap: 8,
+          alignItems: "flex-start",
+        }}
       >
         <span
-          className="text-muted-foreground flex-shrink-0"
           style={{
             fontFamily: font.mono,
             fontWeight: 700,
             fontSize: 10,
             textTransform: "uppercase",
             letterSpacing: "0.05em",
+            color: "#555",
+            flexShrink: 0,
             marginTop: 2,
           }}
         >
-          Реком.
+          →
         </span>
-        <p className="text-foreground" style={{ fontSize: 13, lineHeight: "20px" }}>
+        <p style={{ fontSize: 13, lineHeight: "20px", color: "#222" }}>
           {issue.recommendation}
         </p>
       </div>

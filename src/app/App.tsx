@@ -88,11 +88,11 @@ function UploadScreen({ onAnalyze }: UploadScreenProps) {
           onChange={setContext}
           label="Контекст екрану"
           labelSuffix=" (необов'язково)"
-          placeholder="Що це за екран? Яка його головна ціль? На що варто звернути увагу під час аналізу?"
+          placeholder="Пару слів про твій дизайн..."
         />
 
         {/* CTA */}
-        <div className="w-full">
+        <div className="w-full flex justify-center">
           <Button
             disabled={!file}
             onClick={() => file && preview && onAnalyze(file, preview, context)}
